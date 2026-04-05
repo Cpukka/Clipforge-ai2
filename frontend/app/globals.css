@@ -1,0 +1,279 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Light Mode Colors */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  
+  /* Dark Mode Colors */
+  --color-dark-bg-primary: #0a0a0a;
+  --color-dark-bg-secondary: #111111;
+  --color-dark-bg-tertiary: #1a1a1a;
+  --color-dark-surface: #1f1f1f;
+  --color-dark-surface-hover: #2a2a2a;
+  --color-dark-border: #2a2a2a;
+  --color-dark-text-primary: #ffffff;
+  --color-dark-text-secondary: #a3a3a3;
+  --color-dark-text-muted: #737373;
+  
+  /* Light Mode Colors */
+  --color-light-bg-primary: #ffffff;
+  --color-light-bg-secondary: #f9fafb;
+  --color-light-bg-tertiary: #f3f4f6;
+  --color-light-surface: #ffffff;
+  --color-light-surface-hover: #f9fafb;
+  --color-light-border: #e5e7eb;
+  --color-light-text-primary: #111827;
+  --color-light-text-secondary: #4b5563;
+  --color-light-text-muted: #9ca3af;
+  
+  /* Animations */
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-bounce-slow: bounce 2s infinite;
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-slide-up: slide-up 0.3s ease-out;
+  --animate-slide-down: slide-down 0.3s ease-out;
+  --animate-scale: scale 0.2s ease-out;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: .5;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scale {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Base styles with dark mode support */
+:root {
+  --foreground-rgb: var(--color-light-text-primary);
+  --background-start-rgb: var(--color-light-bg-primary);
+  --background-end-rgb: var(--color-light-bg-secondary);
+  
+  /* Background colors */
+  --bg-primary: var(--color-light-bg-primary);
+  --bg-secondary: var(--color-light-bg-secondary);
+  --bg-tertiary: var(--color-light-bg-tertiary);
+  --bg-surface: var(--color-light-surface);
+  --bg-surface-hover: var(--color-light-surface-hover);
+  
+  /* Text colors */
+  --text-primary: var(--color-light-text-primary);
+  --text-secondary: var(--color-light-text-secondary);
+  --text-muted: var(--color-light-text-muted);
+  
+  /* Border colors */
+  --border-color: var(--color-light-border);
+}
+
+.dark {
+  --foreground-rgb: var(--color-dark-text-primary);
+  --background-start-rgb: var(--color-dark-bg-primary);
+  
+  /* Background colors */
+  --bg-primary: var(--color-dark-bg-primary);
+  --bg-secondary: var(--color-dark-bg-secondary);
+  --bg-tertiary: var(--color-dark-bg-tertiary);
+  --bg-surface: var(--color-dark-surface);
+  --bg-surface-hover: var(--color-dark-surface-hover);
+  
+  /* Text colors */
+  --text-primary: var(--color-dark-text-primary);
+  --text-secondary: var(--color-dark-text-secondary);
+  --text-muted: var(--color-dark-text-muted);
+  
+  /* Border colors */
+  --border-color: var(--color-dark-border);
+}
+
+/* Dark mode class for manual toggle */
+.dark {
+  --foreground-rgb: var(--color-dark-text-primary);
+  --background-start-rgb: var(--color-dark-bg-primary);
+  --background-end-rgb: var(--color-dark-bg-secondary);
+  
+  /* Background colors */
+  --bg-primary: var(--color-dark-bg-primary);
+  --bg-secondary: var(--color-dark-bg-secondary);
+  --bg-tertiary: var(--color-dark-bg-tertiary);
+  --bg-surface: var(--color-dark-surface);
+  --bg-surface-hover: var(--color-dark-surface-hover);
+  
+  /* Text colors */
+  --text-primary: var(--color-dark-text-primary);
+  --text-secondary: var(--color-dark-text-secondary);
+  --text-muted: var(--color-dark-text-muted);
+  
+  /* Border colors */
+  --border-color: var(--color-dark-border);
+}
+
+/* Light mode class for manual toggle */
+.light {
+  --foreground-rgb: var(--color-light-text-primary);
+  --background-start-rgb: var(--color-light-bg-primary);
+  --background-end-rgb: var(--color-light-bg-secondary);
+  
+  /* Background colors */
+  --bg-primary: var(--color-light-bg-primary);
+  --bg-secondary: var(--color-light-bg-secondary);
+  --bg-tertiary: var(--color-light-bg-tertiary);
+  --bg-surface: var(--color-light-surface);
+  --bg-surface-hover: var(--color-light-surface-hover);
+  
+  /* Text colors */
+  --text-primary: var(--color-light-text-primary);
+  --text-secondary: var(--color-light-text-secondary);
+  --text-muted: var(--color-light-text-muted);
+  
+  /* Border colors */
+  --border-color: var(--color-light-border);
+}
+
+/* Apply the variables */
+body {
+  color: var(--text-primary);
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      var(--bg-secondary)
+    )
+    var(--bg-primary);
+}
+
+/* Custom scrollbar with theme support */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Utility classes for theme switching */
+.bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.bg-tertiary {
+  background-color: var(--bg-tertiary);
+}
+
+.bg-surface {
+  background-color: var(--bg-surface);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.border-theme {
+  border-color: var(--border-color);
+}
+
+/* Animation utility classes */
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+
+.animate-scale {
+  animation: scale 0.2s ease-out;
+}
+
+/* Hover effects with theme support */
+.hover-bg-surface-hover:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+.transition-theme {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
