@@ -4,7 +4,6 @@ from app.database import SessionLocal
 from app import models
 from app.tasks.video_processor import VideoProcessor
 import os
-import tempfile
 import uuid
 import logging
 
@@ -16,6 +15,7 @@ celery = Celery('tasks', broker='redis://localhost:6379/0')
 def process_video_for_clips(self, video_id: int):
     """Main task to process video and generate clips for social media"""
     db = SessionLocal()
+    job = None
     
     try:
         # Get video
@@ -39,14 +39,12 @@ def process_video_for_clips(self, video_id: int):
         # Initialize processor
         processor = VideoProcessor()
         
-        # Download video to temp file
+        # Get local file path
         local_path = None
         if video.s3_url and video.s3_url.startswith('http://localhost'):
-            # Local file
             filename = video.s3_url.split("/")[-1]
             local_path = f"uploads/{filename}"
         else:
-            # Would download from S3 here
             logger.warning("S3 download not implemented")
             job.status = "failed"
             job.error_message = "S3 download not implemented"
@@ -121,13 +119,15 @@ def process_video_for_clips(self, video_id: int):
         db.commit()
 
         if len(generated_clips) == 0:
-            logger.warning(f"No clips generated for video {video_id}, falling back to no key moments or conversion failure")
-            job.status = "failed"
-            job.error_message = "No clips generated"
+            logger.warning(f"No clips generated for video {video_id}")
+            if job:
+                job.status = "failed"
+                job.error_message = "No clips generated"
         else:
             # Update job status
-            job.status = "completed"
-            job.progress = 100
+            if job:
+                job.status = "completed"
+                job.progress = 100
 
         db.commit()
         
@@ -135,9 +135,10 @@ def process_video_for_clips(self, video_id: int):
         
     except Exception as e:
         logger.error(f"Error processing video {video_id}: {e}")
-        job.status = "failed"
-        job.error_message = str(e)
-        db.commit()
+        if job:
+            job.status = "failed"
+            job.error_message = str(e)
+            db.commit()
         raise e
     finally:
         db.close()

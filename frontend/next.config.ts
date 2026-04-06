@@ -9,16 +9,10 @@ const nextConfig: NextConfig = {
   },
   output: 'standalone',
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
+    // Allow production builds to complete even with type errors
     ignoreBuildErrors: true,
   },
-  eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
-  },
+  // eslint option has been removed - use ESLint CLI instead
 }
 
 export default nextConfig

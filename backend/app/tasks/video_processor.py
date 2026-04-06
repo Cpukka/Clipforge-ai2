@@ -1,13 +1,40 @@
 import os
 import tempfile
 import subprocess
-import whisper
-from moviepy.editor import VideoFileClip
 import numpy as np
 from typing import List, Dict
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Conditionally import heavy dependencies
+whisper = None
+VideoFileClip = None
+
+def get_whisper():
+    global whisper
+    if whisper is None:
+        try:
+            import whisper as _whisper
+            whisper = _whisper
+            logger.info("Whisper module loaded successfully")
+        except ImportError:
+            logger.warning("Whisper module not available. Transcription features will be disabled.")
+            return None
+    return whisper
+
+def get_moviepy():
+    global VideoFileClip
+    if VideoFileClip is None:
+        try:
+            from moviepy.editor import VideoFileClip as _VideoFileClip
+            VideoFileClip = _VideoFileClip
+            logger.info("MoviePy module loaded successfully")
+        except ImportError:
+            logger.warning("MoviePy module not available. Video editing features will be disabled.")
+            return None
+    return VideoFileClip
+
 
 class VideoProcessor:
     """Handles video processing for social media clips"""
@@ -17,15 +44,35 @@ class VideoProcessor:
         
     def load_whisper(self):
         """Load Whisper model on demand"""
+        w = get_whisper()
+        if w is None:
+            logger.warning("Whisper not available, transcription disabled")
+            return None
         if self.whisper_model is None:
             logger.info("Loading Whisper model...")
-            self.whisper_model = whisper.load_model("base")
+            self.whisper_model = w.load_model("base")
         return self.whisper_model
     
     def get_video_info(self, video_path: str) -> Dict:
         """Get video metadata"""
+        MoviePy = get_moviepy()
+        if MoviePy is None:
+            # Fallback to ffprobe
+            try:
+                cmd = [
+                    'ffprobe', '-v', 'quiet', '-print_format', 'json',
+                    '-show_format', '-show_streams', video_path
+                ]
+                result = subprocess.run(cmd, capture_output=True, text=True)
+                import json
+                data = json.loads(result.stdout)
+                duration = float(data.get('format', {}).get('duration', 60))
+                return {"duration": duration, "fps": 30, "size": [1920, 1080], "audio": True}
+            except:
+                return {"duration": 60, "fps": 30, "size": [1920, 1080], "audio": True}
+        
         try:
-            clip = VideoFileClip(video_path)
+            clip = MoviePy(video_path)
             info = {
                 "duration": clip.duration,
                 "fps": clip.fps,
@@ -76,8 +123,12 @@ class VideoProcessor:
     
     def extract_transcription(self, video_path: str) -> Dict:
         """Extract audio transcription using Whisper"""
+        model = self.load_whisper()
+        if model is None:
+            logger.warning("Whisper not available, returning empty transcription")
+            return {"text": "", "segments": [], "language": "en"}
+        
         try:
-            model = self.load_whisper()
             result = model.transcribe(video_path)
             return {
                 "text": result["text"],
@@ -91,6 +142,7 @@ class VideoProcessor:
     def detect_key_moments(self, video_path: str, transcription: Dict) -> List[Dict]:
         """Detect high-engagement moments based on audio and motion"""
         key_moments = []
+        duration = self.get_video_info(video_path).get("duration", 60)
         
         try:
             # Look for sentences with excitement words
@@ -113,10 +165,8 @@ class VideoProcessor:
             
             # Fallback to scene detection when no strong audio moments found
             if not key_moments:
-                logger.info("No audio key moments found, using scene regression fallback")
+                logger.info("No audio key moments found, using scene detection fallback")
                 scenes = self.detect_scenes(video_path)
-                video_info = self.get_video_info(video_path)
-                duration = video_info.get("duration", 60)
 
                 for i, scene in enumerate(scenes[:5]):
                     start = float(scene.get("timestamp", 0))
@@ -156,15 +206,34 @@ class VideoProcessor:
         except Exception as e:
             logger.error(f"Key moments detection error: {e}")
             # Fallback: return first 30 seconds
-            key_moments = [{"start": 0, "end": 30, "text": "Key moment", "score": 1}]
+            key_moments = [{"start": 0, "end": min(30, duration), "text": "Key moment", "score": 1}]
         
         return key_moments[:5]  # Return top 5 moments
     
     def generate_clip(self, video_path: str, start: float, end: float, 
                      output_path: str, platform: str = "tiktok") -> bool:
         """Generate a clip for specific platform"""
+        MoviePy = get_moviepy()
+        if MoviePy is None:
+            # Fallback to ffmpeg
+            try:
+                duration = end - start
+                cmd = [
+                    'ffmpeg', '-y',
+                    '-ss', str(start),
+                    '-i', video_path,
+                    '-t', str(duration),
+                    '-c', 'copy',
+                    output_path
+                ]
+                result = subprocess.run(cmd, capture_output=True, text=True)
+                return result.returncode == 0
+            except Exception as e:
+                logger.error(f"FFmpeg clip generation error: {e}")
+                return False
+        
         try:
-            clip = VideoFileClip(video_path).subclip(start, end)
+            clip = MoviePy(video_path).subclip(start, end)
             
             # Set dimensions based on platform
             if platform == "tiktok" or platform == "instagram" or platform == "youtube":
