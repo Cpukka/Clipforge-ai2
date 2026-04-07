@@ -19,19 +19,19 @@ const handler = NextAuth({
         try {
           console.log(`🔐 Attempting login for: ${credentials.email}`)
           
-          const response = await axios.post(
-            "http://localhost:8000/api/auth/login",
-            new URLSearchParams({
-              username: credentials.email,
-              password: credentials.password,
-            }),
-            {
-              headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-              },
-              timeout: 10000,
-            }
-          )
+         const response = await axios.post(
+  `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
+  new URLSearchParams({
+    username: credentials.email,
+    password: credentials.password,
+  }),
+  {
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    timeout: 10000,
+  }
+)
 
           if (response.data && response.data.access_token) {
             console.log("✅ Login successful, token received")
