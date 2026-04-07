@@ -1,15 +1,17 @@
 import axios from 'axios'
 import { getSession, signOut } from 'next-auth/react'
 
-// Use environment variable for API URL
+// Use environment variable for API URL - this is critical!
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
+console.log('API Base URL:', API_BASE_URL) // Remove after confirming
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 second timeout for production
+  timeout: 30000,
 })
 
 // Request interceptor
@@ -29,12 +31,11 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// Response interceptor - handle token expiry
+// Response interceptor
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Token expired - logout user
       await signOut({ redirect: false })
       if (typeof window !== 'undefined') {
         window.location.href = '/login'
