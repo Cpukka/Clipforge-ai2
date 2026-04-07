@@ -1,8 +1,8 @@
-import NextAuth from "next-auth"
+import NextAuth, { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import axios from "axios"
 
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -12,29 +12,34 @@ const handler = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          console.log("❌ Missing credentials")
+          if (process.env.NODE_ENV === "development") {
+            console.log("❌ Missing credentials")
+          }
           return null
         }
 
         try {
-          console.log(`🔐 Attempting login for: ${credentials.email}`)
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL
           
-         const response = await axios.post(
-  `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
-  new URLSearchParams({
-    username: credentials.email,
-    password: credentials.password,
-  }),
-  {
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    timeout: 10000,
-  }
-)
+          if (!apiUrl && process.env.NODE_ENV === "development") {
+            console.error("❌ NEXT_PUBLIC_API_URL is not set")
+          }
+          
+          const response = await axios.post(
+            `${apiUrl}/api/auth/login`,
+            new URLSearchParams({
+              username: credentials.email,
+              password: credentials.password,
+            }),
+            {
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              timeout: 15000,
+            }
+          )
 
           if (response.data && response.data.access_token) {
-            console.log("✅ Login successful, token received")
             return {
               id: credentials.email,
               email: credentials.email,
@@ -43,13 +48,15 @@ const handler = NextAuth({
             }
           }
           
-          console.log("❌ No token in response")
           return null
         } catch (error: any) {
-          console.error("❌ Auth error:", error.message)
-          if (error.response) {
-            console.error("   Status:", error.response.status)
-            console.error("   Data:", error.response.data)
+          // Only log errors in development
+          if (process.env.NODE_ENV === "development") {
+            console.error("Auth error:", error.message)
+            if (error.response) {
+              console.error("Status:", error.response.status)
+              console.error("Data:", error.response.data)
+            }
           }
           return null
         }
@@ -58,30 +65,34 @@ const handler = NextAuth({
   ],
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.accessToken = user.accessToken
-        token.email = user.email ?? undefined
-        token.name = user.name ?? undefined
+        token.email = user.email
+        token.name = user.name
       }
       return token
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken as string
       session.user = {
-         email: token.email ?? "",
-  name: token.name ?? "",
+        email: token.email as string,
+        name: token.name as string,
       }
       return session
     }
   },
   pages: {
     signIn: "/login",
+    error: "/login",
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: true,
-})
+  // Only enable debug in development
+  debug: process.env.NODE_ENV === "development",
+}
 
+const handler = NextAuth(authOptions)
 export { handler as GET, handler as POST }

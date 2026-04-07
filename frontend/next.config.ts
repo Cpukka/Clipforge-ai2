@@ -1,18 +1,43 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ['localhost', '127.0.0.1', 'http://localhost:3000'],
-  logging: {
+  // Remove allowedDevOrigins for production
+  // allowedDevOrigins only needed for development
+  
+  output: 'standalone', // Better for production deployments
+  
+  // Compress responses
+  compress: true,
+  
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+        ],
+      },
+    ]
+  },
+  
+  // Remove logging in production
+  logging: process.env.NODE_ENV === 'development' ? {
     fetches: {
       fullUrl: true,
     },
-  },
-  output: 'standalone',
-  typescript: {
-    // Allow production builds to complete even with type errors
-    ignoreBuildErrors: true,
-  },
-  // eslint option has been removed - use ESLint CLI instead
+  } : undefined,
 }
 
 export default nextConfig
