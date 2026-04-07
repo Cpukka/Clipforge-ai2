@@ -2,7 +2,11 @@ import axios from 'axios'
 import { getSession, signOut } from 'next-auth/react'
 
 // Use environment variable for API URL - this is critical!
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL!
+
+if (!API_BASE_URL) {
+  throw new Error("NEXT_PUBLIC_API_URL is not defined")
+}
 
 console.log('API Base URL:', API_BASE_URL) // Remove after confirming
 
