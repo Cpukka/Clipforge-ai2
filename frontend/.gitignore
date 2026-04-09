@@ -44,3 +44,4 @@ next-env.d.ts
 .vscode/
 .idea/
 .vercel
+.env*.local
