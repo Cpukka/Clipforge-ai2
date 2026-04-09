@@ -1,12 +1,8 @@
 'use client'
 
-import { FilmIcon, ArrowDownTrayIcon, HashtagIcon, DocumentTextIcon, ShareIcon } from '@heroicons/react/24/outline'
-import dynamic from 'next/dynamic'
+import { FilmIcon, ArrowDownTrayIcon, HashtagIcon, DocumentTextIcon, ShareIcon, PlayIcon } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
-
-// Dynamically import ReactPlayer to avoid SSR issues
-const ReactPlayer = dynamic(() => import('react-player'), { ssr: false })
 
 interface ClipCardProps {
   clip: {
@@ -70,17 +66,24 @@ export default function ClipCard({ clip }: ClipCardProps) {
 
   return (
     <div className="bg-surface border border-theme rounded-lg overflow-hidden hover:shadow-xl transition-shadow">
-      {/* Video Player */}
+      {/* Video Player - Using native video element instead of ReactPlayer */}
       <div className="relative aspect-[9/16] bg-tertiary">
-        <ReactPlayer
-          url={clip.s3_url}
-          controls={true}
-          width="100%"
-          height="100%"
-          playing={isPlaying}
-          light={true}
-          onClick={() => setIsPlaying(true)}
+        <video
+          src={clip.s3_url}
+          controls
+          className="w-full h-full object-cover"
+          poster={clip.s3_url}
         />
+        
+        {/* Play overlay when not playing */}
+        {!isPlaying && (
+          <div 
+            className="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer hover:bg-black/50 transition-all"
+            onClick={() => setIsPlaying(true)}
+          >
+            <PlayIcon className="h-12 w-12 text-white opacity-80" />
+          </div>
+        )}
         
         {/* Platform Badge */}
         <div className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium ${getPlatformColor(clip.platform)}`}>
