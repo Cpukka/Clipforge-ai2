@@ -189,19 +189,18 @@ export default function VideoDetailPage({ params }: { params: Promise<{ id: stri
 
         {/* Video Player Section - Native HTML5 Video */}
         <div className="bg-surface rounded-lg overflow-hidden border border-theme mb-8">
-          <div className="aspect-video bg-black">
-            <video
-              controls
-              className="w-full h-full"
-              src={video.s3_url}
-              onPlay={() => setPlaying(true)}
-              onPause={() => setPlaying(false)}
-              controlsList="nodownload"
-            >
-              <source src={video.s3_url} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          </div>
+          // Replace ReactPlayer section with native video
+<div className="aspect-video bg-black">
+  <video
+    controls
+    className="w-full h-full"
+    src={video.s3_url}
+    controlsList="nodownload"
+  >
+    <source src={video.s3_url} type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+</div>
           
           <div className="p-6">
             <div className="flex items-start justify-between mb-4">

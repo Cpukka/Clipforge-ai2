@@ -1,10 +1,7 @@
 'use client'
 
-import dynamic from 'next/dynamic'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline'
-
-const ReactPlayer = dynamic(() => import('react-player'), { ssr: false })
 
 interface VideoPlayerProps {
   url: string
@@ -13,25 +10,30 @@ interface VideoPlayerProps {
 }
 
 export default function VideoPlayer({ url, title, onDownload }: VideoPlayerProps) {
+  const videoRef = useRef<HTMLVideoElement>(null)
   const [progress, setProgress] = useState(0)
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      const currentProgress = videoRef.current.currentTime / videoRef.current.duration
+      setProgress(currentProgress || 0)
+    }
+  }
 
   return (
     <div className="bg-surface rounded-lg overflow-hidden border border-theme">
       <div className="aspect-video bg-black">
-        <ReactPlayer
-          url={url}
-          controls={true}
-          width="100%"
-          height="100%"
-          onProgress={({ played }) => setProgress(played)}
-          config={{
-            file: {
-              attributes: {
-                controlsList: 'nodownload',
-              },
-            },
-          }}
-        />
+        <video
+          ref={videoRef}
+          src={url}
+          controls
+          className="w-full h-full"
+          onTimeUpdate={handleTimeUpdate}
+          controlsList="nodownload"
+        >
+          <source src={url} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
       </div>
       
       <div className="p-6">
