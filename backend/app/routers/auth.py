@@ -29,8 +29,13 @@ async def register(
             detail="Email or username already registered"
         )
 
+    # Truncate password to 72 bytes for bcrypt
+    password = user.password
+    if len(password.encode('utf-8')) > 72:
+        password = password[:72]
+    
     # Hash password safely
-    hashed_password = get_password_hash(user.password)
+    hashed_password = get_password_hash(password)
 
     new_user = models.User(
         email=user.email,
@@ -55,7 +60,12 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    user = authenticate_user(db, form_data.username, form_data.password)
+    # Truncate password to 72 bytes for bcrypt
+    password = form_data.password
+    if len(password.encode('utf-8')) > 72:
+        password = password[:72]
+    
+    user = authenticate_user(db, form_data.username, password)
 
     if not user:
         raise HTTPException(
