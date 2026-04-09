@@ -21,13 +21,31 @@ app = FastAPI(
 # Mount static files for uploads - THIS IS CRITICAL FOR VIDEO PLAYBACK
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-# CORS configuration
+# CORS configuration - Allow multiple origins including production frontend
+# Use settings.CORS_ORIGINS if available, otherwise use defaults
+origins = [
+    "https://clipforge-ai2.vercel.app",
+    "https://clipforge-ai2.onrender.com",
+    "http://localhost:3000",
+    "http://localhost:8000",
+]
+
+# If CORS_ORIGINS is set in settings, use it
+if hasattr(settings, 'CORS_ORIGINS') and settings.CORS_ORIGINS:
+    if isinstance(settings.CORS_ORIGINS, str):
+        # Parse comma-separated string
+        origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",")]
+    else:
+        origins = settings.CORS_ORIGINS
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=86400,  # Cache preflight requests for 24 hours
 )
 
 # Include routers
@@ -44,3 +62,8 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+# OPTIONS handler for CORS preflight (if needed)
+@app.options("/{path:path}")
+async def options_handler():
+    return {}

@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Union
+import json
 
 class Settings(BaseSettings):
     # Database
@@ -22,8 +23,8 @@ class Settings(BaseSettings):
     # OpenAI
     OPENAI_API_KEY: str = ""
     
-    # CORS - handle as comma-separated string from .env
-    CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    # CORS - handle multiple formats: JSON array, comma-separated, or single string
+    CORS_ORIGINS: Union[str, List[str]] = "http://localhost:3000"
     
     # File Upload
     MAX_UPLOAD_SIZE: int = 500 * 1024 * 1024  # 500MB
@@ -37,12 +38,24 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = ".env"
+        extra = "ignore"  # Ignore extra fields from env
+    
+    def get_cors_origins(self) -> List[str]:
+        """Parse CORS origins from various formats into a list"""
+        if isinstance(self.CORS_ORIGINS, list):
+            return self.CORS_ORIGINS
         
-        @classmethod
-        def parse_env_var(cls, field_name: str, raw_val: str):
-            if field_name == "CORS_ORIGINS":
-                # Parse comma-separated string into list
-                return [origin.strip() for origin in raw_val.split(",")]
-            return raw_val
+        if isinstance(self.CORS_ORIGINS, str):
+            # Try to parse as JSON array first
+            if self.CORS_ORIGINS.strip().startswith('['):
+                try:
+                    return json.loads(self.CORS_ORIGINS)
+                except json.JSONDecodeError:
+                    pass
+            
+            # Fallback to comma-separated
+            return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        
+        return ["http://localhost:3000"]  # Default fallback
 
 settings = Settings()
